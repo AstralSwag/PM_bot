@@ -20,7 +20,7 @@ def get_done_today_issues(API_KEY, USER_ID):
     projects = response.json()
 
     # Открываем файл для записи
-    output_file = 'closed_issues_report.txt'
+    output_file = 'fact_output.txt'
     with open(output_file, 'w', encoding='utf-8') as file:
         # Записываем заголовок таблицы
         file.write('| Статус | Проект | Идентификатор задачи | Название задачи | Последний комментарий |\n')
