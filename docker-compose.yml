@@ -1,0 +1,15 @@
+services:
+  it4-pm:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: it4-pm
+    restart: always
+    volumes:
+      - ./config:/app/config
+    networks:
+      - it4-pm-network
+
+networks:
+  it4-pm-network:
+    driver: bridge
