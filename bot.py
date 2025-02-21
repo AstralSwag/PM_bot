@@ -6,31 +6,34 @@ import os
 import time
 import threading
 
+# Загрузка конфигурации
 config = load_config()
 BOT_TOKEN = config.get("BOT_TOKEN")
 USER_MAP = config.get("USER_MAP")
+
 # Анимация спиннера
 SPINNER = ["|", "/", "-", "\\"]
-#   Кнопачки
+
+# Кнопки
 markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
 btn_plan = types.KeyboardButton("План")
 btn_fact = types.KeyboardButton("Факт")
-markup.add(btn_plan)
-markup.add(btn_fact)
+btn_restart = types.KeyboardButton("Перезапуск бота")  # Новая кнопка
+markup.add(btn_plan, btn_fact, btn_restart)  # Добавляем все кнопки в клавиатуру
 
 # Инициализация бота
 bot = telebot.TeleBot(BOT_TOKEN)
 
+# Функция для запуска скрипта plan.py
 def run_plan_script(user_id):
     try:
-        # Запуск скрипта plan.py с передачей USER_ID
         subprocess.run(["python", "plan.py", user_id], check=True)
     except Exception as e:
         print(f"Ошибка при выполнении plan.py: {e}")
 
+# Функция для запуска скрипта fact.py
 def run_fact_script(user_id):
     try:
-        # Запуск скрипта fact.py с передачей USER_ID
         subprocess.run(["python", "fact.py", user_id], check=True)
     except Exception as e:
         print(f"Ошибка при выполнении fact.py: {e}")
@@ -38,9 +41,16 @@ def run_fact_script(user_id):
 # Обработчик команды /start
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
-    bot.send_message(message.chat.id, "Привет! \n\n Кнопка 'План' -- все задачи в работе \n Кнопка 'Факт' -- выполненные задачи за сегодня", reply_markup=markup)
+    bot.send_message(
+        message.chat.id,
+        "Привет! \n\n"
+        "Кнопка 'План' -- все задачи в работе \n"
+        "Кнопка 'Факт' -- выполненные задачи за сегодня \n"
+        "Кнопка 'Перезапуск бота' -- перезапуск бота",
+        reply_markup=markup
+    )
 
-# Обработчик "План"
+# Обработчик кнопки "План"
 @bot.message_handler(func=lambda message: message.text == "План")
 def handle_plan_button(message):
     try:
@@ -56,8 +66,6 @@ def handle_plan_button(message):
 
         # Формируем ключ для поиска в USER_MAP
         user_key = f"@{username}"
-
-        # Проверяем, есть ли username в USER_MAP
         if user_key not in USER_MAP:
             bot.send_message(message.chat.id, f"Ошибка: Ваш username ({user_key}) не найден в базе данных.")
             return
@@ -83,18 +91,17 @@ def handle_plan_button(message):
             )
             time.sleep(0.5)
 
-            # Проверяем, завершился ли процесс
-            if os.path.exists("plan_output.txt"):
-                with open("plan_output.txt", "r", encoding="utf-8") as file:
-                    plan_content = file.read()
+        # Проверяем, завершился ли процесс
+        if os.path.exists("plan_output.txt"):
+            with open("plan_output.txt", "r", encoding="utf-8") as file:
+                plan_content = file.read()
 
-        # Удаляем спинер
+        # Удаляем спиннер
         bot.delete_message(chat_id=message.chat.id, message_id=loading_message.message_id)
 
         # Отправка содержимого файла в формате monospace
         bot.send_message(message.chat.id, f"```\n{plan_content}\n```", parse_mode="MarkdownV2", reply_markup=markup)
         subprocess.run(["rm", "plan_output.txt"], check=True)
-        
 
     except FileNotFoundError:
         bot.send_message(message.chat.id, "Файл plan_output не найден. Проверьте работу скрипта plan.py.")
@@ -103,11 +110,10 @@ def handle_plan_button(message):
     except Exception as e:
         bot.send_message(message.chat.id, f"Произошла ошибка: {str(e)}")
 
-# Обработчик "Факт"
+# Обработчик кнопки "Факт"
 @bot.message_handler(func=lambda message: message.text == "Факт")
-def handle_plan_button(message):
+def handle_fact_button(message):
     try:
-
         # Убираем клавиатуру
         loading_message = bot.send_message(message.chat.id, "⏳ Загружаю данные... |", reply_markup=types.ReplyKeyboardRemove())
         bot.delete_message(chat_id=message.chat.id, message_id=loading_message.message_id)
@@ -120,8 +126,6 @@ def handle_plan_button(message):
 
         # Формируем ключ для поиска в USER_MAP
         user_key = f"@{username}"
-
-        # Проверяем, есть ли username в USER_MAP
         if user_key not in USER_MAP:
             bot.send_message(message.chat.id, f"Ошибка: Ваш username ({user_key}) не найден в базе данных.")
             return
@@ -129,7 +133,7 @@ def handle_plan_button(message):
         # Получаем USER_ID из USER_MAP
         current_user_id = USER_MAP[user_key]
 
-        # Запускаем выполнение plan.py в отдельном потоке
+        # Запускаем выполнение fact.py в отдельном потоке
         thread = threading.Thread(target=run_fact_script, args=(current_user_id,))
         thread.start()
 
@@ -147,11 +151,12 @@ def handle_plan_button(message):
             )
             time.sleep(0.5)
 
-            # Проверяем, завершился ли процесс
-            if os.path.exists("fact_output.txt"):
-                with open("fact_output.txt", "r", encoding="utf-8") as file:
-                    fact_content = file.read()
+        # Проверяем, завершился ли процесс
+        if os.path.exists("fact_output.txt"):
+            with open("fact_output.txt", "r", encoding="utf-8") as file:
+                fact_content = file.read()
 
+        # Удаляем спиннер
         bot.delete_message(chat_id=message.chat.id, message_id=loading_message.message_id)
 
         # Отправка содержимого файла в формате monospace
@@ -164,6 +169,12 @@ def handle_plan_button(message):
         bot.send_message(message.chat.id, "Произошла ошибка при выполнении скрипта fact.py.")
     except Exception as e:
         bot.send_message(message.chat.id, f"Произошла ошибка: {str(e)}")
+
+# Обработчик кнопки "Перезапуск бота"
+@bot.message_handler(func=lambda message: message.text == "Перезапуск бота")
+def handle_restart_button(message):
+    bot.send_message(message.chat.id, "Бот перезапущен!", reply_markup=markup)
+    send_welcome(message)  # Вызываем обработчик команды /start
 
 # Запуск бота
 if __name__ == "__main__":
