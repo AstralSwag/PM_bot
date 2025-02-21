@@ -152,6 +152,8 @@ def handle_plan_button(message):
                 with open("fact_output.txt", "r", encoding="utf-8") as file:
                     fact_content = file.read()
 
+        bot.delete_message(chat_id=message.chat.id, message_id=loading_message.message_id)
+
         # Отправка содержимого файла в формате monospace
         bot.send_message(message.chat.id, f"```\n{fact_content}\n```", parse_mode="MarkdownV2", reply_markup=markup)
         subprocess.run(["rm", "fact_output.txt"], check=True)
