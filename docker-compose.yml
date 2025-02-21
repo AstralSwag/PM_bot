@@ -12,4 +12,5 @@ services:
 
 networks:
   it4-pm-network:
+    name: it4-pm-network
     driver: bridge
