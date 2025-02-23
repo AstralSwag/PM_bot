@@ -1,4 +1,4 @@
-from printer import get_recently_updated_issues
+from printer import get_done_today_issues
 from load_config import load_config
 import sys
 
@@ -12,4 +12,4 @@ if len(sys.argv) < 2:
 
 USER_ID = sys.argv[1]
 
-get_recently_updated_issues(API_KEY, USER_ID)
+get_done_today_issues(API_KEY,USER_ID)
