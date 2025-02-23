@@ -194,8 +194,8 @@ def handle_all_done_today_button(message):
     except Exception as e:
         bot.send_message(message.chat.id, f"Произошла ошибка: {str(e)}")
 
-# Обработчик кнопки "Факт"
-@bot.message_handler(func=lambda message: message.text == "Факт")
+# Обработчик кнопки "✅Факт"
+@bot.message_handler(func=lambda message: message.text == "✅Факт")
 def handle_fact_button(message):
     try:
         # Убираем клавиатуру
@@ -255,8 +255,8 @@ def handle_fact_button(message):
         bot.send_message(message.chat.id, f"Произошла ошибка: {str(e)}")
 
 
-# Обработчик кнопки "План"
-@bot.message_handler(func=lambda message: message.text == "План")
+# Обработчик кнопки "🟡План"
+@bot.message_handler(func=lambda message: message.text == "🟡План")
 def handle_plan_button(message):
     try:
         # Убираем клавиатуру
