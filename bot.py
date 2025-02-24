@@ -124,7 +124,7 @@ def handle_all_inwork_button(message):
         bot.delete_message(chat_id=message.chat.id, message_id=loading_message.message_id)
 
         # Отправка содержимого файла в формате monospace
-        bot.send_message(message.chat.id, f"```\n{all_inwork_content}\n```", parse_mode="MarkdownV2", reply_markup=markup)
+        send_long_message(bot, message.chat.id, all_inwork_content, parse_mode="MarkdownV2", reply_markup=markup)
         subprocess.run(["rm", "all_inwork_output.txt"], check=True)
 
     except FileNotFoundError:
@@ -184,7 +184,7 @@ def handle_all_done_today_button(message):
         bot.delete_message(chat_id=message.chat.id, message_id=loading_message.message_id)
 
         # Отправка содержимого файла в формате monospace
-        bot.send_message(message.chat.id, f"```\n{all_done_today_content}\n```", parse_mode="MarkdownV2", reply_markup=markup)
+        send_long_message(bot, message.chat.id, all_done_today_content, parse_mode="MarkdownV2", reply_markup=markup)
         subprocess.run(["rm", "all_done_today_output.txt"], check=True)
 
     except FileNotFoundError:
@@ -243,8 +243,8 @@ def handle_fact_button(message):
         # Удаляем спиннер
         bot.delete_message(chat_id=message.chat.id, message_id=loading_message.message_id)
 
-        # Отправка содержимого файла в формате monospace
-        bot.send_message(message.chat.id, f"```\n{fact_content}\n```", parse_mode="MarkdownV2", reply_markup=markup)
+        # Отправка содержимого файла
+        send_long_message(bot, message.chat.id, f"#Факт \n\n{fact_content}", parse_mode="MarkdownV2", reply_markup=markup)
         subprocess.run(["rm", "fact_output.txt"], check=True)
 
     except FileNotFoundError:
@@ -305,8 +305,9 @@ def handle_plan_button(message):
         bot.delete_message(chat_id=message.chat.id, message_id=loading_message.message_id)
 
         # Отправка содержимого файла в формате monospace
-        bot.send_message(message.chat.id, f"```\n{plan_content}\n```", parse_mode="MarkdownV2", reply_markup=markup)
+        send_long_message(bot, message.chat.id, f"#План \n\n{plan_content}", parse_mode="MarkdownV2", reply_markup=markup)
         subprocess.run(["rm", "plan_output.txt"], check=True)
+
 
     except FileNotFoundError:
         bot.send_message(message.chat.id, "Файл plan_output не найден. Проверьте работу скрипта plan.py.")
@@ -320,6 +321,26 @@ def handle_plan_button(message):
 def handle_restart_button(message):
     bot.send_message(message.chat.id, "Бот перезапущен!", reply_markup=markup)
     send_welcome(message)  # Вызываем обработчик команды /start
+
+# Обработка длинных сообщений
+def send_long_message(bot, chat_id, text, parse_mode=None, reply_markup=None):
+    # Максимальная длина одного сообщения
+    MAX_MESSAGE_LENGTH = 4096
+    
+    # Если текст слишком длинный, разбиваем его
+    while len(text) > 0:
+        # Берем первую часть текста
+        chunk = text[:MAX_MESSAGE_LENGTH]
+        
+        # Удаляем эту часть из оригинального текста
+        text = text[MAX_MESSAGE_LENGTH:]
+        
+        # Отправляем часть сообщения в формате monospace
+        bot.send_message(chat_id, f"```\n{chunk}\n```", parse_mode=parse_mode, reply_markup=reply_markup if not text else None)
+        
+        # Если остался ещё текст, добавляем задержку между сообщениями
+        if text:
+            time.sleep(0.5)  # Можно ajustировать время задержки
 
 # Запуск бота
 if __name__ == "__main__":
